@@ -1,4 +1,4 @@
-import { IChatInputFactory } from '@jupyter/chat';
+import { ChatInput, IChatInputFactory } from '@jupyter/chat';
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
@@ -16,7 +16,7 @@ const plugin: JupyterFrontEndPlugin<IChatInputFactory> = {
   requires: [IEditorServices],
   provides: IChatInputFactory,
   activate: (_app: JupyterFrontEnd, editorServices: IEditorServices) => ({
-    create: props =>
+    create: (props: ChatInput.IProps) =>
       React.createElement(ChatCodeMirrorInput, {
         ...props,
         editorFactory: editorServices.factoryService.newInlineEditor
