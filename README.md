@@ -25,20 +25,19 @@ text is a separate follow-up for `jupyter-chat-completions`.
   adapter here. This adds no model service or network request. The material
   integration risk is the fork-only factory API described below.
 
-## Development prerequisite
+## Fork dependency
 
-This extension uses `IChatInputFactory` from the **rpwagner/jupyter-chat fork**.
-The upstream `@jupyter/chat` package at version 0.25.1 does not export that
-token yet. Build and link `packages/jupyter-chat` from the fork in the same
-activated JupyterLab development environment before building this extension;
-install the fork's JupyterLab chat extension as well. A registry-only install
-of `@jupyter/chat` will not build this adapter until the factory API is
-published. This repository remains private and is not configured for public
-package publication.
+The public `@jupyter/chat@0.25.1` does not export `IChatInputFactory`. This
+private extension pins a commit of [rpwagner/jupyter-chat](https://github.com/rpwagner/jupyter-chat)
+as a Yarn Git workspace dependency. That workspace builds its JS and type
+declarations during packing; no public npm release is required. The pinned
+commit includes the input factory and the package preparation hook. A Git
+source install takes longer than the registry install.
 
-With the fork available locally, follow [CONTRIBUTING.md](CONTRIBUTING.md) and
-`AGENTS.md` to install dependencies, build, and install the extension in the
-activated environment. Open a chat and verify command selection, sending,
-attachments, and editing an existing message. The source package needs to be
-shared as one instance with the chat extension so both plugins use the same
-factory token.
+JupyterLab shares the adapter's bundled `@jupyter/chat` module as a singleton
+so the fork's chat extension and this factory provider use the same token.
+Install the fork's JupyterLab chat extension in the same environment to show
+the chat interface. Follow [CONTRIBUTING.md](CONTRIBUTING.md) and `AGENTS.md`
+to build and install this extension in an activated environment, then verify
+command selection, sending, attachments, and message editing in a running
+JupyterLab.

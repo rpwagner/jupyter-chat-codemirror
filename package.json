@@ -107,7 +107,6 @@
         "outputDir": "jupyter_chat_codemirror/labextension",
         "sharedPackages": {
             "@jupyter/chat": {
-                "bundled": false,
                 "singleton": true
             }
         }

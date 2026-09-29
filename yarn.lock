@@ -2290,9 +2290,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyter/chat@npm:^0.25.1":
+"@jupyter/chat@https://github.com/rpwagner/jupyter-chat.git#workspace=@jupyter/chat&commit=44a72e5c35c5ec218e67d48cc5229b2572bff5d4":
   version: 0.25.1
-  resolution: "@jupyter/chat@npm:0.25.1"
+  resolution: "@jupyter/chat@https://github.com/rpwagner/jupyter-chat.git#workspace=%40jupyter%2Fchat&commit=44a72e5c35c5ec218e67d48cc5229b2572bff5d4"
   dependencies:
     "@emotion/react": ^11.10.5
     "@emotion/styled": ^11.10.5
@@ -2323,7 +2323,7 @@ __metadata:
     clsx: ^2.1.0
     react: ^18.2.0
     react-dom: ^18.2.0
-  checksum: 922469dbb22f2a3366f265af031cddf31be98b86b89f80ed07609b4a918e9e6f5d254ab80738091ad0264c7150121e16c83fabd3cdf3665f14cff23da6b6fed1
+  checksum: d35d9916919bbbf362084d4a8c736a34f0c2812ec6dd0283d0c55b71a3398a6afa8cc91ee8a0236e5fda4034b44eb82fc21ab82e68899ec0389dfcbaac697eb1
   languageName: node
   linkType: hard
 
@@ -8093,7 +8093,7 @@ __metadata:
     "@codemirror/view": ^6.39.14
     "@eslint/js": ^9.0.0
     "@jupyter/builder": ^1.2.0
-    "@jupyter/chat": ^0.25.1
+    "@jupyter/chat": "https://github.com/rpwagner/jupyter-chat.git#workspace=@jupyter/chat&commit=44a72e5c35c5ec218e67d48cc5229b2572bff5d4"
     "@jupyter/eslint-plugin": ^0.0.5
     "@jupyterlab/application": ^4.5.0
     "@jupyterlab/apputils": ^4.5.0
