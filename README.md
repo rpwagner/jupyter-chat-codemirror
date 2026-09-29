@@ -1,7 +1,5 @@
 # jupyter_chat_codemirror
 
-[![Github Actions Status](https://github.com/rpwagner/jupyter-chat-codemirror/workflows/Build/badge.svg)](https://github.com/rpwagner/jupyter-chat-codemirror/actions/workflows/build.yml)
-
 A CodeMirror-backed input adapter for Jupyter Chat.
 
 ## Requirements
