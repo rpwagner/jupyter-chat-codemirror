@@ -7,6 +7,14 @@
   background: var(--jp-layout-color0);
 }
 
+[data-jp-theme-light='false'] .jp-jupyter-chat-codemirror-input {
+  --jp-editor-selected-focused-background: color-mix(
+    in srgb,
+    var(--jp-brand-color1) 50%,
+    var(--jp-layout-color0)
+  );
+}
+
 .jp-jupyter-chat-codemirror-input .cm-editor {
   background: transparent;
 }
