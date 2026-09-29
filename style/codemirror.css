@@ -1,0 +1,25 @@
+.jp-jupyter-chat-codemirror-input {
+  box-sizing: border-box;
+  min-height: 3.5em;
+  max-height: 15em;
+  overflow-y: auto;
+  padding: 12px;
+  background: var(--jp-layout-color0);
+}
+
+.jp-jupyter-chat-codemirror-input .cm-editor {
+  background: transparent;
+}
+
+.jp-jupyter-chat-codemirror-input .cm-scroller {
+  font-family: var(--jp-ui-font-family);
+}
+
+.jp-jupyter-chat-codemirror-input .cm-content {
+  min-height: 1.5em;
+  padding: 0;
+}
+
+.jp-jupyter-chat-codemirror-input .cm-focused {
+  outline: none;
+}

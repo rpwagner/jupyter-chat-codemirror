@@ -56,7 +56,15 @@
         "watch:labextension": "jupyter-builder watch ."
     },
     "dependencies": {
-        "@jupyterlab/application": "^4.0.0"
+        "@codemirror/autocomplete": "^6.20.0",
+        "@codemirror/state": "^6.5.4",
+        "@codemirror/view": "^6.39.14",
+        "@jupyter/chat": "^0.25.1",
+        "@jupyterlab/application": "^4.5.0",
+        "@jupyterlab/apputils": "^4.5.0",
+        "@jupyterlab/codeeditor": "^4.5.0",
+        "@jupyterlab/codemirror": "^4.5.0",
+        "react": "^18.2.0"
     },
     "devDependencies": {
         "@eslint/js": "^9.0.0",
@@ -96,7 +104,13 @@
     "private": true,
     "jupyterlab": {
         "extension": true,
-        "outputDir": "jupyter_chat_codemirror/labextension"
+        "outputDir": "jupyter_chat_codemirror/labextension",
+        "sharedPackages": {
+            "@jupyter/chat": {
+                "bundled": false,
+                "singleton": true
+            }
+        }
     },
     "prettier": {
         "singleQuote": true,
