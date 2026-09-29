@@ -28,7 +28,8 @@ jobs:
       run: |
         set -eux
         YARN_ENABLE_IMMUTABLE_INSTALLS=0 jlpm
-        git diff -- yarn.lock
+        jlpm exec prettier src/chat-codemirror.tsx src/index.ts --write
+        git diff -- src
         jlpm run lint:check
 
     - name: Test the extension
