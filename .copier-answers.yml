@@ -1,0 +1,18 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+# Local private-incubation hardening intentionally replaces generated npm publishConfig with package.json private=true.
+_commit: v4.6.4
+_src_path: https://github.com/jupyterlab/extension-template
+advanced: false
+author_email: richard.p.wagner@gmail.com
+author_name: Rick Wagner
+create_claude_symlink: true
+create_gemini_symlink: true
+has_ai_rules: true
+has_binder: false
+has_settings: false
+kind: frontend
+labextension_name: jupyter-chat-codemirror
+project_short_description: A CodeMirror-backed input adapter for Jupyter Chat.
+python_name: jupyter_chat_codemirror
+repository: https://github.com/rpwagner/jupyter-chat-codemirror
+test: true
