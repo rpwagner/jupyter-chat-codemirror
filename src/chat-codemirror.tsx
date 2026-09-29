@@ -49,7 +49,6 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
     const placeholderSlot = new Compartment();
     let sending = false;
     let disposed = false;
-    let editor: CodeMirrorEditor;
 
     /** Send through the same command preprocessing used by the stock input. */
     async function send(): Promise<void> {
@@ -87,7 +86,10 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
         try {
           commands.push(...(await provider.listCommandCompletions(model)));
         } catch (error) {
-          console.error(`Unable to retrieve chat commands from ${provider.id}`, error);
+          console.error(
+            `Unable to retrieve chat commands from ${provider.id}`,
+            error
+          );
         }
         if (context.aborted) {
           return null;
@@ -162,7 +164,11 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
     const onKeyDown = Prec.high(
       EditorView.domEventHandlers({
         keydown: (event, view) => {
-          if (event.key === 'Escape' && editRef.current && onCancelRef.current) {
+          if (
+            event.key === 'Escape' &&
+            editRef.current &&
+            onCancelRef.current
+          ) {
             if (completionStatus(view.state)) {
               return false;
             }
@@ -212,7 +218,7 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
       editorModel.dispose();
       throw new Error('The configured editor service must provide CodeMirror');
     }
-    editor = createdEditor;
+    const editor: CodeMirrorEditor = createdEditor;
 
     const onValueChanged = (_: IInputModel, value: string) => {
       if (editorModel.sharedModel.source !== value) {
@@ -241,7 +247,5 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
     };
   }, [model, editorFactory, chatCommandRegistry]);
 
-  return (
-    <div className="jp-jupyter-chat-codemirror-input" ref={hostRef} />
-  );
+  return <div className="jp-jupyter-chat-codemirror-input" ref={hostRef} />;
 }

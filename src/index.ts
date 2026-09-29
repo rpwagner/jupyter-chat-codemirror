@@ -1,5 +1,8 @@
 import { IChatInputFactory } from '@jupyter/chat';
-import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
+import {
+  JupyterFrontEnd,
+  JupyterFrontEndPlugin
+} from '@jupyterlab/application';
 import { IEditorServices } from '@jupyterlab/codeeditor';
 import React from 'react';
 
