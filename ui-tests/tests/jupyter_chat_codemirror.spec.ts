@@ -1,23 +1,12 @@
 import { expect, test } from '@jupyterlab/galata';
 
-/**
- * Don't load JupyterLab webpage before running the tests.
- * This is required to ensure we capture all log messages.
- */
-test.use({ autoGoto: false });
-
-test('should emit an activation console message', async ({ page }) => {
-  const logs: string[] = [];
-
-  page.on('console', message => {
-    logs.push(message.text());
-  });
-
-  await page.goto();
-
-  expect(
-    logs.filter(
-      s => s === 'JupyterLab extension jupyter-chat-codemirror is activated!'
+test('registers and activates the chat input factory', async ({ page }) => {
+  const status = await page.evaluate(() => ({
+    registered: window.jupyterapp.hasPlugin('jupyter-chat-codemirror:plugin'),
+    activated: window.jupyterapp.isPluginActivated(
+      'jupyter-chat-codemirror:plugin'
     )
-  ).toHaveLength(1);
+  }));
+
+  expect(status).toEqual({ registered: true, activated: true });
 });
