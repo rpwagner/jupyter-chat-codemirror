@@ -59,7 +59,7 @@
         "@codemirror/autocomplete": "^6.20.0",
         "@codemirror/state": "^6.5.4",
         "@codemirror/view": "^6.39.14",
-        "@jupyter/chat": "^0.25.1",
+        "@jupyter/chat": "https://github.com/rpwagner/jupyter-chat.git#workspace=@jupyter/chat&commit=44a72e5c35c5ec218e67d48cc5229b2572bff5d4",
         "@jupyterlab/application": "^4.5.0",
         "@jupyterlab/apputils": "^4.5.0",
         "@jupyterlab/codeeditor": "^4.5.0",
