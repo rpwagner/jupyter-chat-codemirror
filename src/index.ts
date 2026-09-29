@@ -1,18 +1,27 @@
+import { ChatInput, IChatInputFactory } from '@jupyter/chat';
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
+import { IEditorServices } from '@jupyterlab/codeeditor';
+import React from 'react';
 
-/**
- * Initialization data for the jupyter-chat-codemirror extension.
- */
-const plugin: JupyterFrontEndPlugin<void> = {
+import { ChatCodeMirrorInput } from './chat-codemirror';
+
+/** Replace Jupyter Chat's composer and message editor with CodeMirror. */
+const plugin: JupyterFrontEndPlugin<IChatInputFactory> = {
   id: 'jupyter-chat-codemirror:plugin',
   description: 'A CodeMirror-backed input adapter for Jupyter Chat.',
   autoStart: true,
-  activate: (app: JupyterFrontEnd) => {
-    console.log('JupyterLab extension jupyter-chat-codemirror is activated!');
-  }
+  requires: [IEditorServices],
+  provides: IChatInputFactory,
+  activate: (_app: JupyterFrontEnd, editorServices: IEditorServices) => ({
+    create: (props: ChatInput.IProps) =>
+      React.createElement(ChatCodeMirrorInput, {
+        ...props,
+        editorFactory: editorServices.factoryService.newInlineEditor
+      })
+  })
 };
 
 export default plugin;

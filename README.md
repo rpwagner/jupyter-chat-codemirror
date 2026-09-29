@@ -1,64 +1,43 @@
-# jupyter_chat_codemirror
+# jupyter-chat-codemirror
 
-A CodeMirror-backed input adapter for Jupyter Chat.
+A CodeMirror input for the Jupyter Chat composer and message editor. It replaces
+the text field through `IChatInputFactory` in
+[rpwagner/jupyter-chat](https://github.com/rpwagner/jupyter-chat), while Jupyter
+Chat continues to own the attachment preview, toolbar, and message model.
 
-## Requirements
+The adapter currently supports multiline input, the configured Enter or
+Shift+Enter send shortcut, Escape to cancel editing, focus requests, and the
+existing chat command providers (`/`, `@`, and any other registered providers).
+The command list is deterministic and does not call an LLM. Inline generated
+text is a separate follow-up for `jupyter-chat-completions`.
 
-- JupyterLab >= 4.0.0
+## Dependency decision
 
-## Install
+- **Capability:** embed an editor and show Jupyter Chat's command suggestions.
+- **Existing solution:** JupyterLab's `IEditorServices` supplies CodeMirror;
+  Jupyter Chat supplies the input model and command providers.
+- **Direct dependencies:** `@jupyter/chat`, `@jupyterlab/codeeditor`,
+  `@jupyterlab/codemirror`, React, and the CodeMirror state, view, and
+  autocomplete APIs already used by JupyterLab.
+- **Alternative:** write a separate text editor and popup. That would duplicate
+  cursor handling, keyboard navigation, accessibility, and popup behavior.
+- **Decision:** reuse the host's CodeMirror stack and keep only the model
+  adapter here. This adds no model service or network request. The material
+  integration risk is the fork-only factory API described below.
 
-To install the extension, execute:
+## Fork dependency
 
-```bash
-pip install jupyter_chat_codemirror
-```
+The public `@jupyter/chat@0.25.1` does not export `IChatInputFactory`. This
+private extension pins a commit of [rpwagner/jupyter-chat](https://github.com/rpwagner/jupyter-chat)
+as a Yarn Git workspace dependency. That workspace builds its JS and type
+declarations during packing; no public npm release is required. The pinned
+commit includes the input factory and the package preparation hook. A Git
+source install takes longer than the registry install.
 
-## Uninstall
-
-To remove the extension, execute:
-
-```bash
-pip uninstall jupyter_chat_codemirror
-```
-
-## Contributing
-
-If you would like to contribute to this extension, please refer to the [Contributing Guide](CONTRIBUTING.md).
-
-## AI Coding Assistant Support
-
-This project includes an `AGENTS.md` file with coding standards and best practices for JupyterLab extension development. The file follows the [AGENTS.md standard](https://agents.md) for cross-tool compatibility.
-
-### Compatible AI Tools
-
-`AGENTS.md` works with AI coding assistants that support the standard, including Cursor, GitHub Copilot, Windsurf, Aider, and others. For a current list of compatible tools, see [the AGENTS.md standard](https://agents.md).
-This project also includes symlinks for tool-specific compatibility:
-
-- `CLAUDE.md` → `AGENTS.md` (for Claude Code)
-
-- `GEMINI.md` → `AGENTS.md` (for Gemini Code Assist)
-
-Other conventions you might encounter:
-
-- `.cursorrules` - Cursor's YAML/JSON format (Cursor also supports AGENTS.md natively)
-- `CONVENTIONS.md` / `CONTRIBUTING.md` - For CodeConventions.ai and GitHub bots
-- Project-specific rules in JetBrains AI Assistant settings
-
-All tool-specific files should be symlinks to `AGENTS.md` as the single source of truth.
-
-### What's Included
-
-The `AGENTS.md` file provides guidance on:
-
-- Code quality rules and file-scoped validation commands
-- Naming conventions for packages, plugins, and files
-- Coding standards (TypeScript)
-- Development workflow and debugging
-- Common pitfalls and how to avoid them
-
-### Customization
-
-You can edit `AGENTS.md` to add project-specific conventions or adjust guidelines to match your team's practices. The file uses plain Markdown with Do/Don't patterns and references to actual project files.
-
-**Note**: `AGENTS.md` is living documentation. Update it when you change conventions, add dependencies, or discover new patterns. Include `AGENTS.md` updates in commits that modify workflows or coding standards.
+JupyterLab shares the adapter's bundled `@jupyter/chat` module as a singleton
+so the fork's chat extension and this factory provider use the same token.
+Install the fork's JupyterLab chat extension in the same environment to show
+the chat interface. Follow [CONTRIBUTING.md](CONTRIBUTING.md) and `AGENTS.md`
+to build and install this extension in an activated environment, then verify
+command selection, sending, attachments, and message editing in a running
+JupyterLab.
