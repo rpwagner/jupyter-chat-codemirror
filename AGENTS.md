@@ -23,6 +23,17 @@ existing authority; this reference grants none and creates no runtime dependency
 Report an unavailable canonical source or unresolved conflict rather than
 reconstructing policy or silently choosing precedence. Do not copy general policy here.
 
+Apply the canonical discovery/reuse, visible architectural trade-offs, bounded
+simplification, durable issue/follow-up records, and upgrade-completeness rules
+before and during work as their stages require. During design, existing code is
+evidence for alternatives; during implementation, follow the adopted issue and
+the local editor/API contracts. Read `README.md` for the narrow, provider-neutral
+chat-input responsibility and current Jupyter Chat factory compatibility.
+
+`AGENTS.md` owns local agent guidance. `CLAUDE.md` and `GEMINI.md` are symlinks to
+it, as selected by the existing Copier configuration; preserve those aliases
+when updating the template rather than maintaining independent instruction copies.
+
 ## External Documentation and Resources
 
 ### PRIORITY RESOURCE USAGE
@@ -120,8 +131,7 @@ interface PluginConfig {
 After editing TypeScript files, run:
 
 ```bash
-npx tsc --noEmit src/index.ts  # Check single file
-npx tsc --noEmit               # Check all files
+jlpm tsc --noEmit -p tsconfig.json  # Use the repository's JSX/module settings
 ```
 
 After editing Python files:
@@ -159,7 +169,7 @@ function activate(app: JupyterFrontEnd): void {}
 
 ### Code Organization
 
-**✅ Do**: Implement features completely or not at all. Notify the prompter if you're unable to completely implement a feature.
+**✅ Do**: Deliver the adopted issue with required validation. Use the canonical blocked-work handoff when completion is unavailable; preserve useful work in a pushed branch/draft PR and record the exact next step.
 
 **❌ Don't**: Leave TODO comments or dead code in committed files
 
@@ -297,7 +307,7 @@ await app.commands.execute(CommandIDs.refreshData);
 
 ### Environment Activation (CRITICAL)
 
-**Before ANY command**, ensure you're in the correct environment:
+**Before package installation, build, or validation commands**, ensure you're in the correct environment:
 
 ```bash
 # For conda/mamba/micromamba (replace `conda` with `mamba` or `micromamba` depending on the prompter's preferred tool):
@@ -401,7 +411,7 @@ jupyter lab
 **Quick TypeScript validation** (optional, for fast feedback):
 
 ```bash
-npx tsc --noEmit src/index.ts       # Check single file
+jlpm tsc --noEmit -p tsconfig.json  # Check with repository compiler settings
 ```
 
 **Memory aid**: "What did you change? Restart that!"
@@ -512,7 +522,7 @@ jupyter-builder develop . --overwrite
 
 **❌ Don't**: Manually edit version in `pyproject.toml` — it's dynamically sourced from `package.json`
 
-**Note**: Releases are handled by GitHub Actions, not manually. AI agents should only update versions when explicitly requested by the user.
+**Note**: `RELEASE.md` owns the existing guarded manual and GitHub Actions release procedures. AI agents should only update versions when explicitly requested by the user; private-incubation publication safeguards remain in force.
 
 ### Development Approach
 
