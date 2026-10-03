@@ -4,6 +4,27 @@
 
 After explicit authorization and removal of that safeguard, the extension can be published to `PyPI` and `npm` manually or using the [Jupyter Releaser](https://github.com/jupyter-server/jupyter_releaser).
 
+For maintained Beauty-system work, [AGENTS.md](AGENTS.md) routes to the canonical
+release-stage, evidence, and upgrade-completeness policy. The guarded procedures
+here remain the operational publication paths; policy synchronization grants no
+permission to enable public releases, configure credentials, publish, or deploy.
+
+## Downstream integration and recovery handoff
+
+Building and installing this extension proves only that artifact/environment.
+It does not prove the extension is composed into a running Beauty/Tink image.
+Record the exact artifact or source identity, compatible JupyterLab/Jupyter Chat
+factory API, required consumer image/configuration/activation changes, regression
+evidence, and known-good recovery artifact in the issue/PR. Hand off required
+transitions to the owning image/deployment mechanism and identify unsupported
+steps; do not invent a second release or deployment system here.
+
+Keep offline/build, installed-extension, browser, and live downstream evidence
+distinct. Pending post-release `v0.x` evaluation alone does not block a complete
+PR from review. Recovery needs a compatible prior artifact/image and
+configuration/state; an older wheel alone does not reverse an incompatible
+consumer transition. Coordinated upgrades and signaling remain separate work.
+
 ## Manual release
 
 ### Python package

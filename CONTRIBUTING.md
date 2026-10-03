@@ -1,5 +1,10 @@
 # Contributing
 
+Read [AGENTS.md](AGENTS.md) before maintained Beauty-system design/development;
+it routes to the canonical general policy and owns local agent requirements.
+These procedures describe development installation and tests, not publication
+or downstream image deployment.
+
 ## Development install
 
 Note: You will need Node.js to build the extension package.
@@ -7,8 +12,9 @@ You may install it from [nodejs.org](https://nodejs.org/en/download). We
 recommend using the latest LTS version of Node.js.
 
 The `jlpm` command is JupyterLab's pinned version of
-[yarn](https://yarnpkg.com/) that is installed with JupyterLab. You may use
-`yarn` or `npm` in lieu of `jlpm` below.
+[yarn](https://yarnpkg.com/) that is installed with JupyterLab. Use `jlpm`
+consistently here and retain `yarn.lock`; do not introduce an npm lockfile.
+Run package commands in the activated development environment.
 
 ```bash
 # Clone the repo to your local environment
@@ -60,6 +66,12 @@ folder is located. Then you can remove the symlink named `jupyter-chat-codemirro
 #### Frontend tests
 
 This extension is using [Jest](https://jestjs.io/) for JavaScript code testing.
+
+Run `jlpm lint:check`, `jlpm test`, and the relevant build/installation checks.
+Documentation-only work needs reference/alias checks and `git diff --check`;
+it does not establish browser or live downstream acceptance. Frontend behavior
+changes still require the browser/visual exercises described in `AGENTS.md` and
+the integration tests below. Report which evidence actually ran.
 
 To execute them, execute:
 
