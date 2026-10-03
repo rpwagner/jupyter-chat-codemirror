@@ -4,6 +4,25 @@ This guide provides coding standards and best practices for developing JupyterLa
 
 **Extension type**: frontend
 
+## Beauty-system policy applicability
+
+For maintained Beauty-system work in this repository, read and apply the current
+canonical Beauty-system policy at
+`https://github.com/rpwagner/beauty-runtime/blob/main/AGENTS.md` (authorized access
+required). Follow its applicability and design/implementation distinctions. Use its release-stage
+and branch/PR-readiness guidance for required pre-merge checks, preservation of
+blocked work in a pushed branch/draft PR, and pending post-release/live `v0.x`
+evaluation; pending post-release evidence alone does not keep completed work in
+draft. Record live acceptance as pending until performed.
+
+Keep this routing scoped to maintained Beauty-system work; it does not impose
+Beauty policy or version conventions on upstream. Preserve the extension
+contracts, validation, and release procedures below and in `CONTRIBUTING.md`
+and `RELEASE.md`. Merge, publication, deployment, and rollback require their
+existing authority; this reference grants none and creates no runtime dependency.
+Report an unavailable canonical source or unresolved conflict rather than
+reconstructing policy or silently choosing precedence. Do not copy general policy here.
+
 ## External Documentation and Resources
 
 ### PRIORITY RESOURCE USAGE
