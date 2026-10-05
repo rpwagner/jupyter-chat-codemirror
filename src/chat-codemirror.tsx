@@ -168,13 +168,15 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
     const onKeyDown = Prec.high(
       EditorView.domEventHandlers({
         keydown: (event, view) => {
+          // A pending command query has no menu to accept. Only an active popup
+          // owns these keys; natural text must still accept, send and cancel.
           if (
             event.key === 'Tab' &&
             !event.shiftKey &&
             !event.ctrlKey &&
             !event.metaKey &&
             !event.altKey &&
-            !completionStatus(view.state) &&
+            completionStatus(view.state) !== 'active' &&
             completionBinder.acceptInline(editor)
           ) {
             event.preventDefault();
@@ -185,14 +187,17 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
             editRef.current &&
             onCancelRef.current
           ) {
-            if (completionStatus(view.state)) {
+            if (completionStatus(view.state) === 'active') {
               return false;
             }
             onCancelRef.current();
             event.preventDefault();
             return true;
           }
-          if (event.key !== 'Enter' || completionStatus(view.state)) {
+          if (
+            event.key !== 'Enter' ||
+            completionStatus(view.state) === 'active'
+          ) {
             return false;
           }
           const sendWithShiftEnter = model.config.sendWithShiftEnter ?? false;

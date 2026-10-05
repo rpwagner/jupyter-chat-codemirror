@@ -211,6 +211,8 @@ for (const inSidePanel of [false, true]) {
       const options = page.locator('.cm-tooltip-autocomplete [role="option"]');
       await expect(options).toHaveCount(2);
       await expect(options.first()).toHaveAttribute('aria-selected', 'true');
+      // CodeMirror deliberately ignores navigation for 75 ms after opening.
+      await page.waitForTimeout(100);
       await composer.press('ArrowDown');
       await expect(options.last()).toHaveAttribute('aria-selected', 'true');
       await composer.press('Enter');
@@ -245,6 +247,8 @@ for (const inSidePanel of [false, true]) {
     await composer.type('hello');
     await expect(ghost).toContainText(' world');
     await composer.press('Tab');
+    await expect(ghost).toHaveCount(0);
+    expect(await readDraft(page)).toBe('hello world');
     await composer.press('Enter');
 
     const message = page.locator('.jp-chat-message-container').last();
