@@ -9,13 +9,14 @@ import { ICompletionProviderManager } from '@jupyterlab/completer';
 
 interface IEditorBinding {
   editor: CodeEditor.IEditor;
+  model: IChatPanel['model'];
+  area: IChatPanel['area'];
   widget: IChatPanel | null;
   focusOrder: number;
   released: boolean;
 }
 
 interface IReleaseWaiter {
-  widget: IChatPanel;
   resolve: () => void;
   onDisposed: () => void;
 }
@@ -40,10 +41,15 @@ export class ChatCompletionBinder {
       return;
     }
 
-    this._tracker?.currentChanged.disconnect(this._onCurrentChanged, this);
+    if (this._tracker) {
+      this._tracker.currentChanged.disconnect(this._onTrackerChanged);
+      this._tracker.widgetAdded.disconnect(this._onTrackerChanged);
+    }
+
     this._tracker = tracker;
     this._manager = manager;
-    tracker.currentChanged.connect(this._onCurrentChanged, this);
+    tracker.currentChanged.connect(this._onTrackerChanged);
+    tracker.widgetAdded.connect(this._onTrackerChanged);
 
     this._rebindFocusedEditor();
   }
@@ -51,14 +57,21 @@ export class ChatCompletionBinder {
   /**
    * Register an editor and return an async release callback.
    *
-   * Release waits for a live editor in the same chat to replace the active
-   * completion context, or for the chat panel itself to be disposed. This
-   * prevents the native manager from retaining a disposed editor.
+   * The owning panel is resolved only through the public chat model/area and
+   * tracker contracts. Release waits for a live editor in the same chat to
+   * replace the active completion context, or for the panel itself to be
+   * disposed, so the native manager never targets a disposed editor.
    */
-  register(editor: CodeEditor.IEditor): () => Promise<void> {
+  register(
+    editor: CodeEditor.IEditor,
+    model: IChatPanel['model'],
+    area: IChatPanel['area']
+  ): () => Promise<void> {
     const binding: IEditorBinding = {
       editor,
-      widget: null,
+      model,
+      area,
+      widget: this._findWidget(model, area),
       focusOrder: 0,
       released: false
     };
@@ -84,7 +97,7 @@ export class ChatCompletionBinder {
       return;
     }
 
-    const widget = this._tracker?.currentWidget ?? null;
+    const widget = this._findWidget(binding.model, binding.area);
     if (!widget || widget.isDisposed) {
       return;
     }
@@ -98,9 +111,14 @@ export class ChatCompletionBinder {
     });
   }
 
-  private _onCurrentChanged(): void {
+  private _onTrackerChanged = (): void => {
+    for (const binding of this._bindings.values()) {
+      if (!binding.widget || binding.widget.isDisposed) {
+        binding.widget = this._findWidget(binding.model, binding.area);
+      }
+    }
     this._rebindFocusedEditor();
-  }
+  };
 
   private _rebindFocusedEditor(): void {
     const focused = Array.from(this._bindings.values())
@@ -117,6 +135,18 @@ export class ChatCompletionBinder {
     }
   }
 
+  private _findWidget(
+    model: IChatPanel['model'],
+    area: IChatPanel['area']
+  ): IChatPanel | null {
+    return (
+      this._tracker?.find(
+        widget =>
+          !widget.isDisposed && widget.model === model && widget.area === area
+      ) ?? null
+    );
+  }
+
   private _queueUpdate(
     binding: IEditorBinding,
     widget: IChatPanel
@@ -129,16 +159,12 @@ export class ChatCompletionBinder {
     const generation = ++this._generation;
     const update = this._pending.then(async () => {
       if (
+        generation !== this._generation ||
+        manager !== this._manager ||
         binding.released ||
         binding.editor.isDisposed ||
         widget.isDisposed ||
-        binding.widget !== widget
-      ) {
-        return;
-      }
-
-      if (
-        generation !== this._generation &&
+        binding.widget !== widget ||
         this._active !== binding
       ) {
         return;
@@ -171,6 +197,7 @@ export class ChatCompletionBinder {
     }
 
     this._active = null;
+    ++this._generation;
 
     // React may replace an editor in the same commit. Defer one microtask so
     // the replacement has a chance to register before choosing a fallback.
@@ -194,7 +221,6 @@ export class ChatCompletionBinder {
         resolve();
       };
       const waiter: IReleaseWaiter = {
-        widget,
         resolve: () => {
           widget.disposed.disconnect(onDisposed);
           resolve();
@@ -212,13 +238,19 @@ export class ChatCompletionBinder {
   private _findReplacement(widget: IChatPanel): IEditorBinding | null {
     return (
       Array.from(this._bindings.values())
-        .filter(
-          candidate =>
-            !candidate.released &&
-            !candidate.editor.isDisposed &&
-            candidate.widget === widget
-        )
-        .sort((left, right) => right.focusOrder - left.focusOrder)[0] ?? null
+        .filter(candidate => {
+          if (candidate.released || candidate.editor.isDisposed) {
+            return false;
+          }
+          candidate.widget =
+            candidate.widget ?? this._findWidget(candidate.model, candidate.area);
+          return candidate.widget === widget;
+        })
+        .sort((left, right) => {
+          const focusDelta =
+            Number(right.editor.hasFocus()) - Number(left.editor.hasFocus());
+          return focusDelta || right.focusOrder - left.focusOrder;
+        })[0] ?? null
     );
   }
 
