@@ -1,3 +1,5 @@
+import type { IChatCommandRegistry, IChatTracker } from '@jupyter/chat';
+import type { ICompletionProviderManager } from '@jupyterlab/completer';
 import { expect, test } from '@jupyterlab/galata';
 import type { Page } from '@playwright/test';
 
@@ -41,108 +43,22 @@ for (const inSidePanel of [false, true]) {
   }, testInfo) => {
     await page.evaluate(async providerId => {
       const app = window.jupyterapp;
-      const managerTokenName =
-        '@jupyterlab/completer:ICompletionProviderManager';
-
-      type NamedToken = { name?: string };
-      type RegistryLike = {
-        _serviceMap?: Map<NamedToken, string>;
-        _pluginRegistry?: RegistryLike;
-      };
-      type CompletionManagerLike = {
-        inlineProviders: Array<{ identifier: string }>;
-        registerInlineProvider: (provider: {
-          identifier: string;
-          name: string;
-          fetch: (
-            request: {
-              text: string;
-              offset: number;
-            },
-            context: {
-              widget: { area?: string };
-              editor?: { isDisposed: boolean };
-            }
-          ) => Promise<{ items: Array<{ insertText: string }> }>;
-        }) => void;
-        inline?: {
-          configure: (settings: {
-            showWidget: string;
-            showShortcuts: boolean;
-            streamingAnimation: string;
-            ghostSyntaxHighlighting: boolean;
-            providers: Record<
-              string,
-              {
-                enabled: boolean;
-                timeout: number;
-                debouncerDelay: number;
-                autoFillInMiddle: boolean;
-              }
-            >;
-            minLines: number;
-            maxLines: number;
-            editorResizeDelay: number;
-            reserveSpaceForLongest: boolean;
-            suppressIfTabCompleterActive: boolean;
-          }) => void;
-        };
-      };
-
-      const appRegistry = app as typeof app & RegistryLike;
-      const registries = [appRegistry, appRegistry._pluginRegistry].filter(
-        (value): value is RegistryLike => value !== undefined
-      );
-      let token: NamedToken | undefined;
-      for (const registry of registries) {
-        const serviceMap = registry._serviceMap;
-        if (!serviceMap) {
-          continue;
-        }
-        token = Array.from(serviceMap.keys()).find(
-          candidate => candidate.name === managerTokenName
+      // Galata owns browser-side service discovery; the fixture uses the real
+      // host services and their ordinary public interfaces.
+      const manager = (await window.galata.getPlugin(
+        '@jupyterlab/completer-extension:manager'
+      )) as ICompletionProviderManager | undefined;
+      const tracker = (await window.galata.getPlugin(
+        'jupyterlab-chat-extension:tracker' as never
+      )) as IChatTracker | undefined;
+      const registry = (await window.galata.getPlugin(
+        'jupyterlab-chat-extension:chatCommandRegistry' as never
+      )) as IChatCommandRegistry | undefined;
+      if (!manager?.inline || !tracker || !registry) {
+        throw new Error(
+          'Native completer and matching Jupyter Chat fork are required'
         );
-        if (token) {
-          break;
-        }
       }
-      if (!token) {
-        throw new Error('Unable to resolve the JupyterLab completion manager');
-      }
-
-      const manager = (await app.resolveRequiredService(
-        token as never
-      )) as unknown as CompletionManagerLike;
-      if (!manager.inline) {
-        throw new Error('Native inline completer is unavailable');
-      }
-
-      const trackerToken = registries
-        .flatMap(registry => Array.from(registry._serviceMap?.keys() ?? []))
-        .find(candidate => candidate.name === '@jupyter/chat:IChatTracker');
-      const commandsToken = registries
-        .flatMap(registry => Array.from(registry._serviceMap?.keys() ?? []))
-        .find(
-          candidate => candidate.name === '@jupyter/chat:IChatCommandRegistry'
-        );
-      if (!trackerToken || !commandsToken) {
-        throw new Error('The matching Jupyter Chat fork is required');
-      }
-      type InputLike = {
-        value: string;
-        currentWord: string | null;
-        config: { sendWithShiftEnter?: boolean };
-        focus: () => void;
-      };
-      const tracker = (await app.resolveRequiredService(
-        trackerToken as never
-      )) as unknown as {
-        currentWidget: {
-          model: { input: InputLike };
-          dispose: () => void;
-        } | null;
-        has: (widget: unknown) => boolean;
-      };
       app.commands.addCommand('jupyter-chat-codemirror:test-draft', {
         execute: () => tracker.currentWidget?.model.input.value ?? ''
       });
@@ -155,22 +71,6 @@ for (const inSidePanel of [false, true]) {
           }
         }
       });
-      const registry = (await app.resolveRequiredService(
-        commandsToken as never
-      )) as unknown as {
-        addProvider: (provider: {
-          id: string;
-          listCommandCompletions: (input: InputLike) => Promise<
-            Array<{
-              name: string;
-              providerId: string;
-              replaceWith: string;
-              spaceOnAccept: boolean;
-            }>
-          >;
-          onSubmit: () => Promise<void>;
-        }) => void;
-      };
       registry.addProvider({
         id: 'codemirror-test-commands',
         listCommandCompletions: async input => {
@@ -193,7 +93,7 @@ for (const inSidePanel of [false, true]) {
       });
 
       if (
-        !manager.inlineProviders.some(
+        !(manager.inlineProviders ?? []).some(
           provider => provider.identifier === providerId
         )
       ) {
@@ -205,7 +105,7 @@ for (const inSidePanel of [false, true]) {
               tracker.has(context.widget)
             );
             document.body.dataset.nativeEditorAlive = String(
-              context.editor !== undefined && !context.editor.isDisposed
+              context.editor != null && !context.editor.isDisposed
             );
             document.body.dataset.nativeChatArea =
               context.widget.area ?? 'main';
