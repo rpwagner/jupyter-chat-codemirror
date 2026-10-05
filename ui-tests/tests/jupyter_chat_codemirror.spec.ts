@@ -33,8 +33,7 @@ test('uses JupyterLab native inline completions in composer and message edit', a
 }) => {
   await page.evaluate(async providerId => {
     const app = window.jupyterapp;
-    const managerTokenName =
-      '@jupyterlab/completer:ICompletionProviderManager';
+    const managerTokenName = '@jupyterlab/completer:ICompletionProviderManager';
 
     type NamedToken = { name?: string };
     type RegistryLike = {
