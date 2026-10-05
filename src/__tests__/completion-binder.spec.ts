@@ -60,15 +60,15 @@ function createEditor(initialFocus: boolean): {
 function createHarness() {
   const model = {} as IChatPanel['model'];
   const area = 'main' as IChatPanel['area'];
-  const disposed = createSignal<IChatPanel>(null as unknown as IChatPanel);
+  let widgetIsDisposed = false;
   const widget = {
     id: 'chat-panel',
     model,
     area,
-    isDisposed: false,
-    disposed
+    get isDisposed() {
+      return widgetIsDisposed;
+    }
   } as unknown as IChatPanel;
-  // The signal sender needs the completed widget.
   const widgetDisposed = createSignal(widget);
   Object.defineProperty(widget, 'disposed', { value: widgetDisposed });
 
@@ -91,7 +91,20 @@ function createHarness() {
     updateCompleter
   } as unknown as ICompletionProviderManager;
 
-  return { model, area, widget, tracker, manager, updateCompleter };
+  const disposeWidget = () => {
+    widgetIsDisposed = true;
+    widgetDisposed.emit();
+  };
+
+  return {
+    model,
+    area,
+    widget,
+    tracker,
+    manager,
+    updateCompleter,
+    disposeWidget
+  };
 }
 
 async function flushUpdates(): Promise<void> {
@@ -102,8 +115,15 @@ async function flushUpdates(): Promise<void> {
 
 describe('ChatCompletionBinder', () => {
   it('binds the focused composer and rebinds through message editing', async () => {
-    const { model, area, widget, tracker, manager, updateCompleter } =
-      createHarness();
+    const {
+      model,
+      area,
+      widget,
+      tracker,
+      manager,
+      updateCompleter,
+      disposeWidget
+    } = createHarness();
     const binder = new ChatCompletionBinder();
     const composer = createEditor(true);
 
@@ -138,7 +158,10 @@ describe('ChatCompletionBinder', () => {
     });
     expect(composer.editor.isDisposed).toBe(false);
 
-    await releaseComposer();
+    const releasePromise = releaseComposer();
+    await Promise.resolve();
+    disposeWidget();
+    await releasePromise;
   });
 
   it('keeps CodeMirror usable when the completion manager is unavailable', async () => {
