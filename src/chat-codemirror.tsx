@@ -32,11 +32,7 @@ export interface IChatCodeMirrorProps extends ChatInput.IProps {
 /** A CodeMirror chat input, hosted inside Jupyter Chat's existing composer. */
 export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
   const { model, editorFactory, completionBinder } = props;
-  const {
-    area,
-    chatCommandRegistry,
-    model: chatModel
-  } = useChatContext();
+  const { area, chatCommandRegistry, model: chatModel } = useChatContext();
   const trans = useTranslator();
   const hostRef = useRef<HTMLDivElement>(null);
   const onCancelRef = useRef(props.onCancel);
