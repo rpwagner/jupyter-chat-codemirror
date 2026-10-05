@@ -1,15 +1,23 @@
-import { ChatInput, IChatInputFactory } from '@jupyter/chat';
+import {
+  ChatInput,
+  IChatInputFactory,
+  IChatTracker
+} from '@jupyter/chat';
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { IEditorServices } from '@jupyterlab/codeeditor';
+import { ICompletionProviderManager } from '@jupyterlab/completer';
 import React from 'react';
 
 import { ChatCodeMirrorInput } from './chat-codemirror';
+import { ChatCompletionBinder } from './completion-binder';
+
+const completionBinder = new ChatCompletionBinder();
 
 /** Replace Jupyter Chat's composer and message editor with CodeMirror. */
-const plugin: JupyterFrontEndPlugin<IChatInputFactory> = {
+const inputPlugin: JupyterFrontEndPlugin<IChatInputFactory> = {
   id: 'jupyter-chat-codemirror:plugin',
   description: 'A CodeMirror-backed input adapter for Jupyter Chat.',
   autoStart: true,
@@ -19,9 +27,26 @@ const plugin: JupyterFrontEndPlugin<IChatInputFactory> = {
     create: (props: ChatInput.IProps) =>
       React.createElement(ChatCodeMirrorInput, {
         ...props,
-        editorFactory: editorServices.factoryService.newInlineEditor
+        editorFactory: editorServices.factoryService.newInlineEditor,
+        completionBinder
       })
   })
 };
 
-export default plugin;
+/** Attach tracked chat editors to JupyterLab's native completion manager. */
+const completionPlugin: JupyterFrontEndPlugin<void> = {
+  id: 'jupyter-chat-codemirror:completion',
+  description: 'Connects chat CodeMirror editors to native completions.',
+  autoStart: true,
+  requires: [IChatTracker],
+  optional: [ICompletionProviderManager],
+  activate: (
+    _app: JupyterFrontEnd,
+    tracker: IChatTracker,
+    manager: ICompletionProviderManager | null
+  ) => {
+    completionBinder.configure(tracker, manager);
+  }
+};
+
+export default [inputPlugin, completionPlugin];
