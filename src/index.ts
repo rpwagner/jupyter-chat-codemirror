@@ -1,8 +1,4 @@
-import {
-  ChatInput,
-  IChatInputFactory,
-  IChatTracker
-} from '@jupyter/chat';
+import { ChatInput, IChatInputFactory, IChatTracker } from '@jupyter/chat';
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
