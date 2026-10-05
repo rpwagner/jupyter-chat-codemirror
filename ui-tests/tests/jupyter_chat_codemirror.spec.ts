@@ -1,6 +1,10 @@
 import type { IChatCommandRegistry, IChatTracker } from '@jupyter/chat';
-import type { ICompletionProviderManager } from '@jupyterlab/completer';
+import type {
+  ICompletionProviderManager,
+  IInlineCompleterSettings
+} from '@jupyterlab/completer';
 import { expect, test } from '@jupyterlab/galata';
+import type { ISettingRegistry } from '@jupyterlab/settingregistry';
 import type { Page } from '@playwright/test';
 
 const TEST_PROVIDER = 'jupyter-chat-codemirror:test-inline';
@@ -54,7 +58,10 @@ for (const inSidePanel of [false, true]) {
       const registry = (await window.galata.getPlugin(
         'jupyterlab-chat-extension:chatCommandRegistry' as never
       )) as IChatCommandRegistry | undefined;
-      if (!manager?.inline || !tracker || !registry) {
+      const settingRegistry = (await window.galata.getPlugin(
+        '@jupyterlab/apputils-extension:settings'
+      )) as ISettingRegistry | undefined;
+      if (!manager?.inline || !tracker || !registry || !settingRegistry) {
         throw new Error(
           'Native completer and matching Jupyter Chat fork are required'
         );
@@ -126,24 +133,22 @@ for (const inSidePanel of [false, true]) {
         });
       }
 
+      const settings = await settingRegistry.load(
+        '@jupyterlab/completer-extension:inline-completer'
+      );
+      const defaults =
+        settings.composite as unknown as IInlineCompleterSettings;
       manager.inline.configure({
-        showWidget: 'onHover',
-        showShortcuts: true,
-        streamingAnimation: 'uncover',
-        ghostSyntaxHighlighting: false,
+        ...defaults,
         providers: {
+          ...defaults.providers,
           [providerId]: {
             enabled: true,
             timeout: 1000,
             debouncerDelay: 0,
             autoFillInMiddle: false
           }
-        },
-        minLines: 0,
-        maxLines: 4,
-        editorResizeDelay: 1000,
-        reserveSpaceForLongest: false,
-        suppressIfTabCompleterActive: true
+        }
       });
     }, TEST_PROVIDER);
 
