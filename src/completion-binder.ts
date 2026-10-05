@@ -243,7 +243,8 @@ export class ChatCompletionBinder {
             return false;
           }
           candidate.widget =
-            candidate.widget ?? this._findWidget(candidate.model, candidate.area);
+            candidate.widget ??
+            this._findWidget(candidate.model, candidate.area);
           return candidate.widget === widget;
         })
         .sort((left, right) => {
