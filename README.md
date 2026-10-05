@@ -8,8 +8,24 @@ Chat continues to own the attachment preview, toolbar, and message model.
 The adapter currently supports multiline input, the configured Enter or
 Shift+Enter send shortcut, Escape to cancel editing, focus requests, and the
 existing chat command providers (`/`, `@`, and any other registered providers).
-The command list is deterministic and does not call an LLM. Inline generated
-text is a separate follow-up for `jupyter-chat-completions`.
+The command list is deterministic and does not call an LLM. The adapter also
+connects the focused composer or message editor to JupyterLab's native inline
+completion manager using its real tracked chat panel and CodeMirror editor.
+Standard `IInlineCompletionProvider` implementations can supply ghost text;
+this package supplies no production suggestion provider or model transport.
+
+Tab accepts a native inline suggestion into the draft without sending it. The
+input delegates to the native accept action using the owning panel ID, including
+sidebar chats where JupyterLab's global command targets the main-area widget.
+The deterministic command popup keeps its own navigation and acceptance.
+Completion handlers follow editor replacement and are retained safely until a
+surviving editor takes over or their panel is disposed. Each panel has its own
+binding, including panels that are no longer focused.
+
+The completion services are optional. With the completer extension disabled,
+the adapter remains a normal CodeMirror chat input. Installing it alone does
+not send draft text anywhere; an independently installed and enabled native
+provider owns suggestion requests.
 
 ## Dependency decision
 
@@ -17,12 +33,15 @@ text is a separate follow-up for `jupyter-chat-completions`.
 - **Existing solution:** JupyterLab's `IEditorServices` supplies CodeMirror;
   Jupyter Chat supplies the input model and command providers.
 - **Direct dependencies:** `@jupyter/chat`, `@jupyterlab/codeeditor`,
-  `@jupyterlab/codemirror`, React, and the CodeMirror state, view, and
+  `@jupyterlab/codemirror`, `@jupyterlab/completer`, React, and the CodeMirror state, view, and
   autocomplete APIs already used by JupyterLab.
 - **Alternative:** write a separate text editor and popup. That would duplicate
   cursor handling, keyboard navigation, accessibility, and popup behavior.
 - **Decision:** reuse the host's CodeMirror stack and keep only the model
-  adapter here. This adds no model service or network request. The material
+  adapter here. Reuse the public completion manager and native renderer rather
+  than implement a second completion stack. The small lifecycle and Tab bridge
+  fills chat editor replacement and sidebar command-routing gaps. This adds no
+  model service or network request. The material
   integration risk is the fork-only factory API described below.
 
 ## Fork dependency

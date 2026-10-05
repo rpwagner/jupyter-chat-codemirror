@@ -169,6 +169,18 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
       EditorView.domEventHandlers({
         keydown: (event, view) => {
           if (
+            event.key === 'Tab' &&
+            !event.shiftKey &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.altKey &&
+            !completionStatus(view.state) &&
+            completionBinder.acceptInline(editor)
+          ) {
+            event.preventDefault();
+            return true;
+          }
+          if (
             event.key === 'Escape' &&
             editRef.current &&
             onCancelRef.current

@@ -57,12 +57,11 @@ function createEditor(initialFocus: boolean): {
   };
 }
 
-function createHarness() {
+function createHarness(area: IChatPanel['area'] = 'main', id = 'chat-panel') {
   const model = {} as IChatPanel['model'];
-  const area = 'main' as IChatPanel['area'];
   let widgetIsDisposed = false;
   const widget = {
-    id: 'chat-panel',
+    id,
     model,
     area,
     get isDisposed() {
@@ -108,9 +107,9 @@ function createHarness() {
 }
 
 async function flushUpdates(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
+  for (let index = 0; index < 8; index++) {
+    await Promise.resolve();
+  }
 }
 
 describe('ChatCompletionBinder', () => {
@@ -172,5 +171,151 @@ describe('ChatCompletionBinder', () => {
     binder.configure(tracker, null);
     const release = binder.register(composer.editor, model, area);
     await expect(release()).resolves.toBeUndefined();
+  });
+});
+
+describe('native completion context safety', () => {
+  it('resolves an omitted area through the public model identity', async () => {
+    const { model, widget, tracker, manager, updateCompleter } =
+      createHarness('sidebar');
+    const binder = new ChatCompletionBinder();
+    binder.configure(tracker, manager);
+    const input = createEditor(true);
+    binder.register(input.editor, model, undefined);
+    await flushUpdates();
+    expect(updateCompleter).toHaveBeenLastCalledWith({
+      widget,
+      editor: input.editor
+    });
+  });
+
+  it('accepts native inline text only for the live focused bound editor', async () => {
+    const { model, area, widget, tracker, manager } = createHarness('sidebar');
+    const accept = jest.fn();
+    const isActive = jest.fn().mockReturnValue(true);
+    manager.inline = { accept, isActive } as NonNullable<typeof manager.inline>;
+    const binder = new ChatCompletionBinder();
+    binder.configure(tracker, manager);
+    const input = createEditor(true);
+    binder.register(input.editor, model, area);
+    expect(binder.acceptInline(input.editor)).toBe(false);
+    await flushUpdates();
+    expect(binder.acceptInline(input.editor)).toBe(true);
+    expect(accept).toHaveBeenCalledWith(widget.id);
+    input.setFocus(false);
+    expect(binder.acceptInline(input.editor)).toBe(false);
+    input.setFocus(true);
+    isActive.mockReturnValue(false);
+    expect(binder.acceptInline(input.editor)).toBe(false);
+    input.dispose();
+    expect(binder.acceptInline(input.editor)).toBe(false);
+    expect(accept).toHaveBeenCalledTimes(1);
+  });
+
+  it('retains an inactive panel editor until that panel handler is disposed', async () => {
+    const first = createHarness('main', 'first');
+    const second = createHarness('sidebar', 'second');
+    const tracker = {
+      ...first.tracker,
+      find: (fn: (widget: IChatPanel) => boolean) =>
+        [first.widget, second.widget].find(fn) ?? null
+    } as IChatTracker;
+    const binder = new ChatCompletionBinder();
+    binder.configure(tracker, first.manager);
+    const firstInput = createEditor(true);
+    const releaseFirst = binder.register(
+      firstInput.editor,
+      first.model,
+      first.area
+    );
+    await flushUpdates();
+    firstInput.setFocus(false);
+    const secondInput = createEditor(true);
+    binder.register(secondInput.editor, second.model, second.area);
+    await flushUpdates();
+    expect(first.updateCompleter).toHaveBeenLastCalledWith({
+      widget: second.widget,
+      editor: secondInput.editor
+    });
+    let released = false;
+    const release = releaseFirst().then(() => {
+      released = true;
+    });
+    await flushUpdates();
+    expect(released).toBe(false);
+    first.disposeWidget();
+    await release;
+    expect(released).toBe(true);
+    expect(secondInput.editor.isDisposed).toBe(false);
+  });
+
+  it('waits for an in-flight bind before handing off editor disposal', async () => {
+    const {
+      model,
+      area,
+      widget,
+      tracker,
+      manager,
+      updateCompleter,
+      disposeWidget
+    } = createHarness();
+    let completeUpdate: () => void = () => undefined;
+    updateCompleter.mockImplementationOnce(
+      () =>
+        new Promise<void>(resolve => {
+          completeUpdate = resolve;
+        })
+    );
+    const binder = new ChatCompletionBinder();
+    binder.configure(tracker, manager);
+    const oldInput = createEditor(true);
+    const releaseOld = binder.register(oldInput.editor, model, area);
+    await flushUpdates();
+    oldInput.setFocus(false);
+    let released = false;
+    const release = releaseOld().then(() => {
+      released = true;
+    });
+    const replacement = createEditor(true);
+    binder.register(replacement.editor, model, area);
+    await flushUpdates();
+    expect(released).toBe(false);
+    completeUpdate();
+    await release;
+    expect(updateCompleter).toHaveBeenLastCalledWith({
+      widget,
+      editor: replacement.editor
+    });
+    expect(released).toBe(true);
+    disposeWidget();
+  });
+
+  it('keeps the previous editor alive when rebinding fails', async () => {
+    const { model, area, tracker, manager, updateCompleter, disposeWidget } =
+      createHarness();
+    const error = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const binder = new ChatCompletionBinder();
+    binder.configure(tracker, manager);
+    const composer = createEditor(true);
+    binder.register(composer.editor, model, area);
+    await flushUpdates();
+    composer.setFocus(false);
+    const edit = createEditor(true);
+    const releaseEdit = binder.register(edit.editor, model, area);
+    await flushUpdates();
+    updateCompleter.mockRejectedValueOnce(new Error('native update failed'));
+    let released = false;
+    const release = releaseEdit().then(() => {
+      released = true;
+    });
+    await flushUpdates();
+    expect(error).toHaveBeenCalled();
+    expect(released).toBe(false);
+    expect(edit.editor.isDisposed).toBe(false);
+    disposeWidget();
+    await release;
+    error.mockRestore();
   });
 });

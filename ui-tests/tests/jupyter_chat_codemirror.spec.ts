@@ -333,7 +333,7 @@ for (const inSidePanel of [false, true]) {
     await expect(page.locator('.jp-chat-message-container')).toHaveCount(1);
     await messageEditor.press('Escape');
     await expect(messageEditor).toHaveCount(0);
-    await expect(message.locator('.jp-chat-rendered-markdown')).toContainText(
+    await expect(message.locator('.jp-chat-rendered-message')).toContainText(
       'hello world'
     );
     await expect(page.locator('body')).toHaveAttribute(
