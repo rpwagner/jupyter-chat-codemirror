@@ -38,7 +38,7 @@ test('registers and activates the chat input and completion plugins', async ({
 for (const inSidePanel of [false, true]) {
   test(`uses native inline completions in ${inSidePanel ? 'sidebar' : 'main'} composer and message edit`, async ({
     page
-  }) => {
+  }, testInfo) => {
     await page.evaluate(async providerId => {
       const app = window.jupyterapp;
       const managerTokenName =
@@ -54,10 +54,16 @@ for (const inSidePanel of [false, true]) {
         registerInlineProvider: (provider: {
           identifier: string;
           name: string;
-          fetch: (request: {
-            text: string;
-            offset: number;
-          }) => Promise<{ items: Array<{ insertText: string }> }>;
+          fetch: (
+            request: {
+              text: string;
+              offset: number;
+            },
+            context: {
+              widget: { area?: string };
+              editor?: { isDisposed: boolean };
+            }
+          ) => Promise<{ items: Array<{ insertText: string }> }>;
         }) => void;
         inline?: {
           configure: (settings: {
@@ -135,6 +141,7 @@ for (const inSidePanel of [false, true]) {
           model: { input: InputLike };
           dispose: () => void;
         } | null;
+        has: (widget: unknown) => boolean;
       };
       app.commands.addCommand('jupyter-chat-codemirror:test-draft', {
         execute: () => tracker.currentWidget?.model.input.value ?? ''
@@ -193,7 +200,15 @@ for (const inSidePanel of [false, true]) {
         manager.registerInlineProvider({
           identifier: providerId,
           name: 'Deterministic chat test provider',
-          fetch: async request => {
+          fetch: async (request, context) => {
+            document.body.dataset.nativeTrackedPanel = String(
+              tracker.has(context.widget)
+            );
+            document.body.dataset.nativeEditorAlive = String(
+              context.editor !== undefined && !context.editor.isDisposed
+            );
+            document.body.dataset.nativeChatArea =
+              context.widget.area ?? 'main';
             const prefix = request.text.slice(0, request.offset);
             if (prefix.endsWith('slow')) {
               document.body.dataset.inlineSlowStarted = 'true';
@@ -255,6 +270,22 @@ for (const inSidePanel of [false, true]) {
       `.jp-GhostText[data-provided-by="${TEST_PROVIDER}"]`
     );
     await expect(ghost).toContainText(' world');
+    await expect(page.locator('body')).toHaveAttribute(
+      'data-native-tracked-panel',
+      'true'
+    );
+    await expect(page.locator('body')).toHaveAttribute(
+      'data-native-editor-alive',
+      'true'
+    );
+    await expect(page.locator('body')).toHaveAttribute(
+      'data-native-chat-area',
+      inSidePanel ? 'sidebar' : 'main'
+    );
+    await testInfo.attach('native-composer-ghost', {
+      body: await page.screenshot(),
+      contentType: 'image/png'
+    });
 
     // This is the standard JupyterLab inline-completer Tab path. It must insert
     // into the draft without submitting the chat message.
@@ -324,6 +355,10 @@ for (const inSidePanel of [false, true]) {
     await messageEditor.press('ControlOrMeta+A');
     await messageEditor.type('edit');
     await expect(ghost).toContainText(' accepted');
+    await testInfo.attach('native-message-edit-ghost', {
+      body: await page.screenshot(),
+      contentType: 'image/png'
+    });
     await messageEditor.press('Tab');
     await expect(ghost).toHaveCount(0);
     await expect(messageEditor).toHaveText('edit accepted');
