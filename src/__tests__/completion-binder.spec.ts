@@ -193,7 +193,13 @@ describe('native completion context safety', () => {
     const { model, area, widget, tracker, manager } = createHarness('sidebar');
     const accept = jest.fn();
     const isActive = jest.fn().mockReturnValue(true);
-    manager.inline = { accept, isActive } as NonNullable<typeof manager.inline>;
+    manager.inline = {
+      accept,
+      isActive,
+      invoke: jest.fn(),
+      cycle: jest.fn(),
+      configure: jest.fn()
+    };
     const binder = new ChatCompletionBinder();
     binder.configure(tracker, manager);
     const input = createEditor(true);
