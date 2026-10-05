@@ -1,6 +1,6 @@
 {
     "name": "jupyter-chat-codemirror",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "A CodeMirror-backed input adapter for Jupyter Chat.",
     "keywords": [
         "jupyter",
@@ -59,12 +59,12 @@
         "@codemirror/autocomplete": "^6.20.0",
         "@codemirror/state": "^6.5.4",
         "@codemirror/view": "^6.39.14",
-        "@jupyter/chat": "https://github.com/rpwagner/jupyter-chat.git#workspace=@jupyter/chat&commit=44a72e5c35c5ec218e67d48cc5229b2572bff5d4",
+        "@jupyter/chat": "https://github.com/rpwagner/jupyter-chat.git#workspace=@jupyter/chat&commit=e567ade971fcdbde28e45b975be200020fe00099",
         "@jupyterlab/application": "^4.5.0",
         "@jupyterlab/apputils": "^4.5.0",
         "@jupyterlab/codeeditor": "^4.5.0",
-        "@jupyterlab/completer": "^4.5.0",
         "@jupyterlab/codemirror": "^4.5.0",
+        "@jupyterlab/completer": "^4.5.0",
         "react": "^18.2.0"
     },
     "devDependencies": {

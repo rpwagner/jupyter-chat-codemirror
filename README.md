@@ -50,7 +50,10 @@ The public `@jupyter/chat@0.25.1` does not export `IChatInputFactory`. This
 private extension pins a commit of [rpwagner/jupyter-chat](https://github.com/rpwagner/jupyter-chat)
 as a Yarn Git workspace dependency. That workspace builds its JS and type
 declarations during packing; no public npm release is required. The pinned
-commit includes the input factory and the package preparation hook. A Git
+commit `e567ade971fcdbde28e45b975be200020fe00099` synchronizes upstream
+main `840493ee977bf28963146258e8490c5bb2ca8886` and preserves the input factory
+and package preparation hook. Version 0.1.1 identifies the rebuilt private
+artifact; version 0.1.0 remains the compatible recovery input. A Git
 source install takes longer than the registry install.
 
 JupyterLab shares the adapter's bundled `@jupyter/chat` module as a singleton
