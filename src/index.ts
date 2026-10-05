@@ -34,14 +34,15 @@ const completionPlugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyter-chat-codemirror:completion',
   description: 'Connects chat CodeMirror editors to native completions.',
   autoStart: true,
-  requires: [IChatTracker],
-  optional: [ICompletionProviderManager],
+  optional: [IChatTracker, ICompletionProviderManager],
   activate: (
     _app: JupyterFrontEnd,
-    tracker: IChatTracker,
+    tracker: IChatTracker | null,
     manager: ICompletionProviderManager | null
   ) => {
-    completionBinder.configure(tracker, manager);
+    if (tracker) {
+      completionBinder.configure(tracker, manager);
+    }
   }
 };
 
