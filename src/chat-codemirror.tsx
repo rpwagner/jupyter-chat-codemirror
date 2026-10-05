@@ -19,16 +19,20 @@ import { CodeEditor } from '@jupyterlab/codeeditor';
 import { CodeMirrorEditor } from '@jupyterlab/codemirror';
 import React, { useEffect, useRef } from 'react';
 
+import { ChatCompletionBinder } from './completion-binder';
+
 /** The props supplied by the chat input factory. */
 export interface IChatCodeMirrorProps extends ChatInput.IProps {
   /** JupyterLab's configured editor factory. */
   editorFactory: CodeEditor.Factory;
+  /** Shared lifecycle bridge to JupyterLab's native completion manager. */
+  completionBinder: ChatCompletionBinder;
 }
 
 /** A CodeMirror chat input, hosted inside Jupyter Chat's existing composer. */
 export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
-  const { model, editorFactory } = props;
-  const { chatCommandRegistry } = useChatContext();
+  const { model, editorFactory, completionBinder } = props;
+  const { area, chatCommandRegistry, model: chatModel } = useChatContext();
   const trans = useTranslator();
   const hostRef = useRef<HTMLDivElement>(null);
   const onCancelRef = useRef(props.onCancel);
@@ -164,19 +168,36 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
     const onKeyDown = Prec.high(
       EditorView.domEventHandlers({
         keydown: (event, view) => {
+          // A pending command query has no menu to accept. Only an active popup
+          // owns these keys; natural text must still accept, send and cancel.
+          if (
+            event.key === 'Tab' &&
+            !event.shiftKey &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.altKey &&
+            completionStatus(view.state) !== 'active' &&
+            completionBinder.acceptInline(editor)
+          ) {
+            event.preventDefault();
+            return true;
+          }
           if (
             event.key === 'Escape' &&
             editRef.current &&
             onCancelRef.current
           ) {
-            if (completionStatus(view.state)) {
+            if (completionStatus(view.state) === 'active') {
               return false;
             }
             onCancelRef.current();
             event.preventDefault();
             return true;
           }
-          if (event.key !== 'Enter' || completionStatus(view.state)) {
+          if (
+            event.key !== 'Enter' ||
+            completionStatus(view.state) === 'active'
+          ) {
             return false;
           }
           const sendWithShiftEnter = model.config.sendWithShiftEnter ?? false;
@@ -235,6 +256,12 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
     model.valueChanged.connect(onValueChanged);
     model.configChanged.connect(onConfigChanged);
     model.focusInputSignal?.connect(onFocusRequested);
+
+    const releaseCompletion = completionBinder.register(
+      editor,
+      chatModel,
+      area
+    );
     editor.focus();
 
     return () => {
@@ -242,10 +269,24 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
       model.valueChanged.disconnect(onValueChanged);
       model.configChanged.disconnect(onConfigChanged);
       model.focusInputSignal?.disconnect(onFocusRequested);
-      editor.dispose();
-      editorModel.dispose();
+
+      const disposeEditor = () => {
+        editor.dispose();
+        editorModel.dispose();
+      };
+      void releaseCompletion().then(disposeEditor, error => {
+        console.error('Unable to release chat completion binding', error);
+        disposeEditor();
+      });
     };
-  }, [model, editorFactory, chatCommandRegistry]);
+  }, [
+    model,
+    editorFactory,
+    completionBinder,
+    chatCommandRegistry,
+    chatModel,
+    area
+  ]);
 
   return <div className="jp-jupyter-chat-codemirror-input" ref={hostRef} />;
 }

@@ -110,6 +110,9 @@ jobs:
       run: |
         set -eux
         python -m pip install "jupyterlab>=4.0.0,<5" jupyter_chat_codemirror*.whl
+        # Match the factory API selected by the adapter's frontend metadata.
+        CHAT_SOURCE=$(python -c "import json; print(json.load(open('package.json'))['dependencies']['@jupyter/chat'].replace('https://', 'git+https://').replace('#workspace=@jupyter/chat&commit=', '@') + '#subdirectory=python/jupyterlab-chat')")
+        python -m pip install "$CHAT_SOURCE"
 
     - name: Install dependencies
       working-directory: ui-tests
