@@ -10,7 +10,7 @@ import { ICompletionProviderManager } from '@jupyterlab/completer';
 interface IEditorBinding {
   editor: CodeEditor.IEditor;
   model: IChatPanel['model'];
-  area: IChatPanel['area'];
+  area: IChatPanel['area'] | undefined;
   widget: IChatPanel | null;
   focusOrder: number;
   released: boolean;
@@ -65,7 +65,7 @@ export class ChatCompletionBinder {
   register(
     editor: CodeEditor.IEditor,
     model: IChatPanel['model'],
-    area: IChatPanel['area']
+    area: IChatPanel['area'] | undefined
   ): () => Promise<void> {
     const binding: IEditorBinding = {
       editor,
@@ -137,12 +137,14 @@ export class ChatCompletionBinder {
 
   private _findWidget(
     model: IChatPanel['model'],
-    area: IChatPanel['area']
+    area: IChatPanel['area'] | undefined
   ): IChatPanel | null {
     return (
       this._tracker?.find(
         widget =>
-          !widget.isDisposed && widget.model === model && widget.area === area
+          !widget.isDisposed &&
+          widget.model === model &&
+          (area === undefined || widget.area === area)
       ) ?? null
     );
   }
