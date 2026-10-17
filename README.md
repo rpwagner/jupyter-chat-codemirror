@@ -22,6 +22,12 @@ Completion handlers follow editor replacement and are retained safely until a
 surviving editor takes over or their panel is disposed. Each panel has its own
 binding, including panels that are no longer focused.
 
+While a chat CodeMirror input has focus, the adapter suppresses JupyterLab's
+floating inline-completer control widget so frequent suggestions do not cover the
+draft. Native ghost text and Tab acceptance remain active. The global JupyterLab
+inline-completer setting is not changed, so notebooks and other editors retain
+their normal behavior.
+
 The completion services are optional. With the completer extension disabled,
 the adapter remains a normal CodeMirror chat input. Installing it alone does
 not send draft text anywhere; an independently installed and enabled native

@@ -175,6 +175,19 @@ for (const inSidePanel of [false, true]) {
       `.jp-GhostText[data-provided-by="${TEST_PROVIDER}"]`
     );
     await expect(ghost).toContainText(' world');
+
+    // Keep the user's global JupyterLab inline-completer setting intact while
+    // suppressing only the floating controls over the focused chat editor.
+    const inlineWidget = page.locator('.jp-InlineCompleter').last();
+    await expect(inlineWidget).toHaveAttribute('data-display', 'onHover');
+    await expect(page.locator('body')).toHaveAttribute(
+      'data-jupyter-chat-codemirror-focused',
+      'true'
+    );
+    await ghost.hover();
+    await expect(inlineWidget).toHaveCSS('display', 'none');
+    await expect(ghost).toBeVisible();
+
     await expect(page.locator('body')).toHaveAttribute(
       'data-native-tracked-panel',
       'true'
@@ -264,6 +277,9 @@ for (const inSidePanel of [false, true]) {
     await messageEditor.press('ControlOrMeta+A');
     await messageEditor.type('edit');
     await expect(ghost).toContainText(' accepted');
+    await ghost.hover();
+    await expect(inlineWidget).toHaveCSS('display', 'none');
+    await expect(ghost).toBeVisible();
     await testInfo.attach('native-message-edit-ghost', {
       body: await page.screenshot(),
       contentType: 'image/png'
@@ -313,6 +329,40 @@ for (const inSidePanel of [false, true]) {
     await expect(page.locator('body')).toHaveAttribute(
       'data-chat-submit-calls',
       '2'
+    );
+
+    // Leaving chat restores ordinary native controls in a real file editor.
+    // Use the same deterministic provider; no model service is involved.
+    const editorPath = await page.evaluate(async () => {
+      const app = window.jupyterapp;
+      const file = await app.serviceManager.contents.newUntitled({
+        type: 'file',
+        ext: '.txt'
+      });
+      await app.commands.execute('docmanager:open', {
+        path: file.path,
+        factory: 'Editor'
+      });
+      return file.path;
+    });
+    const fileEditor = page.locator('.jp-FileEditor .cm-content');
+    await expect(fileEditor).toBeVisible();
+    await fileEditor.click();
+    await expect(page.locator('body')).not.toHaveAttribute(
+      'data-jupyter-chat-codemirror-focused'
+    );
+    // Leave room above the cursor for JupyterLab's native hover controls.
+    await fileEditor.type('\n\nhello');
+    await expect(ghost).toContainText(' world');
+    await ghost.hover();
+    const fileInlineWidget = page.locator('.jp-InlineCompleter').last();
+    await expect(fileInlineWidget).toHaveAttribute('data-display', 'onHover');
+    await expect(fileInlineWidget).toHaveCSS('display', 'flex');
+    await expect(fileInlineWidget).toBeVisible();
+    await expect(ghost).toBeVisible();
+    await page.evaluate(
+      path => window.jupyterapp.serviceManager.contents.delete(path),
+      editorPath
     );
   });
 }

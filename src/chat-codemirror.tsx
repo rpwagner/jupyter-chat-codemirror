@@ -21,6 +21,8 @@ import React, { useEffect, useRef } from 'react';
 
 import { ChatCompletionBinder } from './completion-binder';
 
+const CHAT_FOCUS_ATTRIBUTE = 'data-jupyter-chat-codemirror-focused';
+
 /** The props supplied by the chat input factory. */
 export interface IChatCodeMirrorProps extends ChatInput.IProps {
   /** JupyterLab's configured editor factory. */
@@ -47,6 +49,21 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
     if (!host) {
       return;
     }
+
+    const markChatFocused = () => {
+      document.body.setAttribute(CHAT_FOCUS_ATTRIBUTE, 'true');
+    };
+    const clearChatFocused = () => {
+      queueMicrotask(() => {
+        if (
+          !document.activeElement?.closest('.jp-jupyter-chat-codemirror-input')
+        ) {
+          document.body.removeAttribute(CHAT_FOCUS_ATTRIBUTE);
+        }
+      });
+    };
+    host.addEventListener('focusin', markChatFocused);
+    host.addEventListener('focusout', clearChatFocused);
 
     const editorModel = new CodeEditor.Model({ mimeType: 'text/x-markdown' });
     editorModel.sharedModel.setSource(model.value);
@@ -266,6 +283,9 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
 
     return () => {
       disposed = true;
+      host.removeEventListener('focusin', markChatFocused);
+      host.removeEventListener('focusout', clearChatFocused);
+      clearChatFocused();
       model.valueChanged.disconnect(onValueChanged);
       model.configChanged.disconnect(onConfigChanged);
       model.focusInputSignal?.disconnect(onFocusRequested);
