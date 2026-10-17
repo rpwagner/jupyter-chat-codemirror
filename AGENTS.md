@@ -4,31 +4,14 @@ This guide provides coding standards and best practices for developing JupyterLa
 
 **Extension type**: frontend
 
-## Beauty-system policy applicability
+## Repository guidance
 
-For maintained Beauty-system work in this repository, read and apply the current
-canonical Beauty-system policy at
-`https://github.com/rpwagner/beauty-runtime/blob/main/AGENTS.md` (authorized access
-required). Follow its applicability and design/implementation distinctions. Use its release-stage
-and branch/PR-readiness guidance for required pre-merge checks, preservation of
-blocked work in a pushed branch/draft PR, and pending post-release/live `v0.x`
-evaluation; pending post-release evidence alone does not keep completed work in
-draft. Record live acceptance as pending until performed.
-
-Keep this routing scoped to maintained Beauty-system work; it does not impose
-Beauty policy or version conventions on upstream. Preserve the extension
-contracts, validation, and release procedures below and in `CONTRIBUTING.md`
-and `RELEASE.md`. Merge, publication, deployment, and rollback require their
-existing authority; this reference grants none and creates no runtime dependency.
-Report an unavailable canonical source or unresolved conflict rather than
-reconstructing policy or silently choosing precedence. Do not copy general policy here.
-
-Apply the canonical discovery/reuse, visible architectural trade-offs, bounded
-simplification, durable issue/follow-up records, and upgrade-completeness rules
-before and during work as their stages require. During design, existing code is
-evidence for alternatives; during implementation, follow the adopted issue and
-the local editor/API contracts. Read `README.md` for the narrow, provider-neutral
-chat-input responsibility and current Jupyter Chat factory compatibility.
+Follow the adopted issue and this repository's editor/API contracts. Read
+`README.md` for the provider-neutral chat-input responsibility and Jupyter Chat
+factory compatibility, `CONTRIBUTING.md` for validation, and `RELEASE.md` for
+guarded publication procedures. Record which checks ran and any unavailable
+browser or downstream acceptance. Merge, publication and deployment require
+their existing authorization.
 
 `AGENTS.md` owns local agent guidance. `CLAUDE.md` and `GEMINI.md` are symlinks to
 it, as selected by the existing Copier configuration; preserve those aliases
@@ -169,7 +152,7 @@ function activate(app: JupyterFrontEnd): void {}
 
 ### Code Organization
 
-**✅ Do**: Deliver the adopted issue with required validation. Use the canonical blocked-work handoff when completion is unavailable; preserve useful work in a pushed branch/draft PR and record the exact next step.
+**✅ Do**: Deliver the adopted issue with required validation. When blocked, preserve useful work in a pushed branch/draft PR and record validation, the blocker and the exact next step.
 
 **❌ Don't**: Leave TODO comments or dead code in committed files
 
