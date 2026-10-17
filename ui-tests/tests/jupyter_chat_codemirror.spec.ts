@@ -180,6 +180,10 @@ for (const inSidePanel of [false, true]) {
     // suppressing only the floating controls over the focused chat editor.
     const inlineWidget = page.locator('.jp-InlineCompleter').last();
     await expect(inlineWidget).toHaveAttribute('data-display', 'onHover');
+    await expect(page.locator('body')).toHaveAttribute(
+      'data-jupyter-chat-codemirror-focused',
+      'true'
+    );
     await ghost.hover();
     expect(
       await inlineWidget.evaluate(node => getComputedStyle(node).display)
