@@ -38,6 +38,6 @@
  * ghost text/acceptance path and suppress only the control widget while a chat
  * CodeMirror input owns focus. The global JupyterLab setting remains unchanged.
  */
-body:has(.jp-jupyter-chat-codemirror-input:focus-within) .jp-InlineCompleter {
+body[data-jupyter-chat-codemirror-focused='true'] .jp-InlineCompleter {
   display: none;
 }
