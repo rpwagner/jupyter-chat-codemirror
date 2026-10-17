@@ -1,7 +1,7 @@
 # Contributing
 
-Read [AGENTS.md](AGENTS.md) before maintained Beauty-system design/development;
-it routes to the canonical general policy and owns local agent requirements.
+Read [AGENTS.md](AGENTS.md) for this repository's agent requirements and
+editor/API contracts before design or development.
 These procedures describe development installation and tests, not publication
 or downstream image deployment.
 
