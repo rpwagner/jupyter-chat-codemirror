@@ -31,3 +31,13 @@
 .jp-jupyter-chat-codemirror-input .cm-focused {
   outline: none;
 }
+
+/*
+ * JupyterLab's floating inline-completer controls are useful in general editor
+ * surfaces but obscure chat text when suggestions are frequent. Keep the native
+ * ghost text/acceptance path and suppress only the control widget while a chat
+ * CodeMirror input owns focus. The global JupyterLab setting remains unchanged.
+ */
+body:has(.jp-jupyter-chat-codemirror-input:focus-within) .jp-InlineCompleter {
+  display: none;
+}
