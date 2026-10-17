@@ -175,6 +175,16 @@ for (const inSidePanel of [false, true]) {
       `.jp-GhostText[data-provided-by="${TEST_PROVIDER}"]`
     );
     await expect(ghost).toContainText(' world');
+
+    // Keep the user's global JupyterLab inline-completer setting intact while
+    // suppressing only the floating controls over the focused chat editor.
+    const inlineWidget = page.locator('.jp-InlineCompleter').last();
+    await expect(inlineWidget).toHaveAttribute('data-display', 'onHover');
+    await ghost.hover();
+    expect(
+      await inlineWidget.evaluate(node => getComputedStyle(node).display)
+    ).toBe('none');
+
     await expect(page.locator('body')).toHaveAttribute(
       'data-native-tracked-panel',
       'true'
