@@ -351,7 +351,8 @@ for (const inSidePanel of [false, true]) {
     await expect(page.locator('body')).not.toHaveAttribute(
       'data-jupyter-chat-codemirror-focused'
     );
-    await fileEditor.type('hello');
+    // Leave room above the cursor for JupyterLab's native hover controls.
+    await fileEditor.type('\n\nhello');
     await expect(ghost).toContainText(' world');
     await ghost.hover();
     const fileInlineWidget = page.locator('.jp-InlineCompleter').last();
