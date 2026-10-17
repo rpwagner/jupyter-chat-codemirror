@@ -55,11 +55,7 @@ export function ChatCodeMirrorInput(props: IChatCodeMirrorProps): JSX.Element {
     };
     const clearChatFocused = () => {
       queueMicrotask(() => {
-        if (
-          !document.activeElement?.closest(
-            '.jp-jupyter-chat-codemirror-input'
-          )
-        ) {
+        if (!document.activeElement?.closest('.jp-jupyter-chat-codemirror-input')) {
           document.body.removeAttribute(CHAT_FOCUS_ATTRIBUTE);
         }
       });
