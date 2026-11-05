@@ -55,7 +55,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
           release_url: ${{ inputs.release_url }}
-          steps_to_skip: ${{ inputs.steps_to_skip }}
 
       - name: Verify GitHub artifacts and publish GitHub release only
         env:
