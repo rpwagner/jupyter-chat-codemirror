@@ -13,6 +13,76 @@ on:
         required: false
 
 jobs:
+  private_release:
+    # GitHub-only release for private incubation. Never run public registry steps.
+    if: ${{ vars.PUBLIC_RELEASES_ENABLED != 'true' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: read
+    steps:
+      - name: Require an explicit draft release
+        env:
+          RELEASE_URL: ${{ inputs.release_url }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RELEASE_URL" =~ ^https://github.com/rpwagner/jupyter-chat-codemirror/releases/tag/v[0-9]+\.[0-9]+\.[0-9]+([a-zA-Z0-9._-]*)?$ ]]; then
+            echo "::error::Supply the draft release URL from Step 1: Prep Release"
+            exit 1
+          fi
+
+      - name: Verify private distribution contract
+        uses: actions/checkout@v4
+      - name: Check package privacy
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("package.json").read_text())
+          if data.get("private") is not True:
+              raise SystemExit("Refusing private workflow: package.json private is not true")
+          PY
+
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+      - name: Populate GitHub draft release with versioned artifacts
+        id: populate-release
+        uses: jupyter-server/jupyter_releaser/.github/actions/populate-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
+          release_url: ${{ inputs.release_url }}
+          steps_to_skip: ${{ inputs.steps_to_skip }}
+
+      - name: Verify GitHub artifacts and publish GitHub release only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_URL: ${{ inputs.release_url }}
+        run: |
+          set -euo pipefail
+          tag="${RELEASE_URL##*/}"
+          gh release view "$tag" --json isDraft,assets > /tmp/private-release.json
+          python - "$tag" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          tag = sys.argv[1]
+          data = json.loads(Path("/tmp/private-release.json").read_text())
+          assets = [a["name"] for a in data["assets"]]
+          expected = "jupyter_chat_codemirror-" + tag.removeprefix("v") + "-py3-none-any.whl"
+          if not data.get("isDraft"):
+              raise SystemExit("Expected a draft GitHub release before publication")
+          if expected not in assets:
+              raise SystemExit(f"Missing required wheel {expected}; release assets: {assets}")
+          if "asset_shas.json" not in assets:
+              raise SystemExit("Missing Jupyter Releaser artifact checksums")
+          PY
+          gh release edit "$tag" --draft=false
+          echo "GitHub-only release $tag published; no PyPI/npm step was invoked." >> "$GITHUB_STEP_SUMMARY"
+
   publish_release:
     if: ${{ vars.PUBLIC_RELEASES_ENABLED == 'true' }}
     runs-on: ubuntu-latest
