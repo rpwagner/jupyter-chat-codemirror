@@ -39,11 +39,11 @@ The original **Step 2** public job remains guarded by
 separate public-publication decision.
 
 
-> **Private incubation:** public PyPI/npm publishing is not currently authorized. `package.json` uses `private: true`; `.github/workflows/publish-release.yml` also skips its publish job unless the repository variable `PUBLIC_RELEASES_ENABLED` is explicitly set to `true`. Do not set that variable or configure release credentials without a later publication decision.
+> **Private incubation:** Public PyPI/npm publishing is not authorized. `package.json` uses `private: true`. The standard Step 2 workflow has a GitHub-only path while `PUBLIC_RELEASES_ENABLED` is unset or false; its public-registry path is guarded by `PUBLIC_RELEASES_ENABLED == 'true'`. Do not enable that variable or configure public release credentials without a separate decision.
 
-After explicit authorization and removal of that safeguard, the extension can be published to `PyPI` and `npm` manually or using the [Jupyter Releaser](https://github.com/jupyter-server/jupyter_releaser).
+Only after separate authorization may the extension be published to `PyPI` and `npm` manually or using the [Jupyter Releaser](https://github.com/jupyter-server/jupyter_releaser).
 
-The procedures below govern publication of this extension. Consumer-specific
+The procedures below describe optional public publication and do not supersede the private GitHub release procedure above. Consumer-specific
 image composition, activation and recovery belong to the consuming project.
 Building or installing the extension establishes only that artifact/environment;
 report browser and downstream validation separately.
@@ -116,7 +116,7 @@ For the release workflows in this repository, make sure GitHub is configured wit
 
 When using [npm trusted publishing](https://docs.npmjs.com/trusted-publishers), `NPM_TOKEN` is not required (and trusted publishing is recommended). Configure `NPM_TOKEN` only if you are publishing without trusted publishers.
 
-Here is a summary of the steps to cut a new release:
+For private releases, use the Step 1 and Step 2 process above. Public publication remains separately guarded. The public sequence, if explicitly authorized, is:
 
 - Go to the Actions panel
 - Run the "Step 1: Prep Release" workflow
