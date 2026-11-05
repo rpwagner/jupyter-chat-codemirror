@@ -33,6 +33,15 @@ jobs:
             exit 1
           fi
 
+      - name: Require an unpublished GitHub draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_URL: ${{ inputs.release_url }}
+        run: |
+          set -euo pipefail
+          tag="${RELEASE_URL##*/}"
+          gh release view "$tag" --json isDraft | jq -e '.isDraft == true' > /dev/null
+
       - name: Verify private distribution contract
         uses: actions/checkout@v4
       - name: Check package privacy
