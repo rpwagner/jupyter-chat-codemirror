@@ -1,5 +1,44 @@
 # Making a new release of jupyter_chat_codemirror
 
+## Private GitHub release (current supported path)
+
+The repository's default workflow publishes versioned **GitHub Release assets
+only**, with no PyPI or npm publication. Keep `package.json` at the currently
+released source version until running Step 1; do not pre-bump it.
+
+1. From `main`, run **Step 1: Prep Release** with the desired *higher*
+   `version_spec` (for example `0.1.2` from `0.1.1`). This bumps the
+   version in the release checkout, generates the changelog and creates a
+   **draft** GitHub release. It needs `contents: write`, `issues: read`
+   and `pull-requests: read` permissions for private-repository changelog
+   generation.
+2. Review the draft release. Run **Step 2: Publish Release** on `main`,
+   entering the draft release URL exactly. With
+   `PUBLIC_RELEASES_ENABLED` unset or false, the private job verifies
+   `package.json` remains private, uses Jupyter Releaser to build and
+   validate artifacts, record their SHA-256 hashes, create the release
+   commit/tag, and upload them to GitHub; it requires the versioned Python
+   wheel and `asset_shas.json` before making the GitHub release non-draft.
+   **This step commits/tags and publishes assets to the private GitHub
+   repository; it does not publish to package registries.** Do not use
+   `steps_to_skip` in this path.
+3. Confirm the wheel and hash manifest under the GitHub release and capture
+   its exact source commit, wheel digest and version for the consuming
+   application's separate artifact review and integration.
+
+The private workflow uses the repository's `release` environment (which may
+require reviewer approval), normal `GITHUB_TOKEN` permissions and existing
+Jupyter Releaser tooling. No publication credentials or public-release
+variable are needed. If branch rules prohibit the releaser's commit/tag push,
+report the failed authorization rather than bypassing the rule or enabling
+public publishing. Do not rerun Step 1 against an already-bumped source
+version: Hatch requires a strictly higher version.
+
+The original **Step 2** public job remains guarded by
+`PUBLIC_RELEASES_ENABLED == 'true'` and must not be enabled without a
+separate public-publication decision.
+
+
 > **Private incubation:** public PyPI/npm publishing is not currently authorized. `package.json` uses `private: true`; `.github/workflows/publish-release.yml` also skips its publish job unless the repository variable `PUBLIC_RELEASES_ENABLED` is explicitly set to `true`. Do not set that variable or configure release credentials without a later publication decision.
 
 After explicit authorization and removal of that safeguard, the extension can be published to `PyPI` and `npm` manually or using the [Jupyter Releaser](https://github.com/jupyter-server/jupyter_releaser).
