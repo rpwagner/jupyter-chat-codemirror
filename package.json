@@ -1,6 +1,6 @@
 {
     "name": "jupyter-chat-codemirror",
-    "version": "0.1.2",
+    "version": "0.1.1",
     "description": "A CodeMirror-backed input adapter for Jupyter Chat.",
     "keywords": [
         "jupyter",
