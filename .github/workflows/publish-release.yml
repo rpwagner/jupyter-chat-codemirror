@@ -23,25 +23,35 @@ jobs:
       issues: read
       pull-requests: read
     steps:
-      - name: Require an explicit draft release
-        env:
-          RELEASE_URL: ${{ inputs.release_url }}
-        run: |
-          set -euo pipefail
-          if [[ ! "$RELEASE_URL" =~ ^https://github.com/rpwagner/jupyter-chat-codemirror/releases/tag/v[0-9]+\.[0-9]+\.[0-9]+([a-zA-Z0-9._-]*)?$ ]]; then
-            echo "::error::Supply the draft release URL from Step 1: Prep Release"
-            exit 1
-          fi
-
-      - name: Require an unpublished GitHub draft
+      - name: Resolve the exact draft release from GitHub
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_URL: ${{ inputs.release_url }}
+          INPUT_RELEASE_URL: ${{ inputs.release_url }}
         run: |
           set -euo pipefail
-          tag="${RELEASE_URL##*/}"
-          gh release view "$tag" --json isDraft | jq -e '.isDraft == true' > /dev/null
+          # Draft URLs use "untagged-..." until the release tag is pushed.
+          # Remove tracking parameters from links copied through a browser/chat.
+          release_url="${INPUT_RELEASE_URL%%\?*}"
+          release_url="${release_url%%\#*}"
+          if [[ "$release_url" != "https://github.com/${GH_REPO}/releases/tag/"* ]]; then
+            echo "::error::Supply a GitHub draft release URL for this repository"
+            exit 1
+          fi
+          release=$(
+            gh api --paginate "repos/${GH_REPO}/releases?per_page=100" |
+              jq -sce --arg url "$release_url" '
+                [.[][] | select(.draft == true and .html_url == $url and .target_commitish == "main")]
+                | if length == 1 then .[0] else empty end
+              '
+          )
+          tag=$(jq -r '.tag_name' <<< "$release")
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([a-zA-Z0-9._-]*)?$ ]]; then
+            echo "::error::The selected draft does not have a valid version tag"
+            exit 1
+          fi
+          printf 'RELEASE_URL=%s\nRELEASE_TAG=%s\n' "$release_url" "$tag" >> "$GITHUB_ENV"
+          echo "Verified draft $tag and its canonical GitHub URL." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify private distribution contract
         uses: actions/checkout@v4
@@ -64,15 +74,15 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
-          release_url: ${{ inputs.release_url }}
+          release_url: ${{ env.RELEASE_URL }}
 
       - name: Verify GitHub artifacts and publish GitHub release only
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_URL: ${{ inputs.release_url }}
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          tag="${RELEASE_URL##*/}"
+          tag="$RELEASE_TAG"
           gh release view "$tag" --json isDraft,assets > /tmp/private-release.json
           python - "$tag" <<'PY'
           import json

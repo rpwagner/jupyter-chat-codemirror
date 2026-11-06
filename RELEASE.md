@@ -5,7 +5,7 @@
 During private incubation, releases go to GitHub only; do not enable public PyPI or npm publication. Keep `package.json` at the current source version until preparing the next release.
 
 1. Run **Step 1: Prep Release** on `main` with a higher version, such as `0.1.2` from `0.1.1`. Review the changelog and draft GitHub release.
-2. Run **Step 2: Publish Release** on `main` with that exact draft release URL. When `PUBLIC_RELEASES_ENABLED` is unset or false, it builds and checks the distributions, creates the release commit and tag, uploads the wheel and SHA-256 manifest, and publishes only the GitHub release. No PyPI/npm publishing runs.
+2. Run **Step 2: Publish Release** on `main` with the draft release URL shown by GitHub. Draft URLs normally end in `untagged-...` until the tag is pushed. The workflow removes query parameters from copied links, verifies the draft directly against GitHub, and reads its actual version tag. When `PUBLIC_RELEASES_ENABLED` is unset or false, it builds and checks the distributions, creates the release commit and tag, uploads the wheel and SHA-256 manifest, and publishes only the GitHub release. No PyPI/npm publishing runs.
 3. Record the wheel's checksum and source commit for the consuming project's separate validation and deployment.
 
 This path uses the existing `release` environment and GitHub repository permissions. The preparation job needs issue and pull-request read access to generate the changelog. Report any branch-protection or authorization failure rather than bypassing it.
