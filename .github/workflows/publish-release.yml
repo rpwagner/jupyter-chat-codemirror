@@ -36,6 +36,7 @@ jobs:
       - name: Require an unpublished GitHub draft
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           RELEASE_URL: ${{ inputs.release_url }}
         run: |
           set -euo pipefail
