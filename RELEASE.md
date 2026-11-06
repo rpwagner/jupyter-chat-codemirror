@@ -1,11 +1,22 @@
 # Making a new release of jupyter_chat_codemirror
 
-> **Private incubation:** public PyPI/npm publishing is not currently authorized. `package.json` uses `private: true`; `.github/workflows/publish-release.yml` also skips its publish job unless the repository variable `PUBLIC_RELEASES_ENABLED` is explicitly set to `true`. Do not set that variable or configure release credentials without a later publication decision.
+## Private GitHub release (normal workflow)
 
-After explicit authorization and removal of that safeguard, the extension can be published to `PyPI` and `npm` manually or using the [Jupyter Releaser](https://github.com/jupyter-server/jupyter_releaser).
+During private incubation, releases go to GitHub only; do not enable public PyPI or npm publication. Keep `package.json` at the current source version until preparing the next release.
 
-The procedures below govern publication of this extension. Consumer-specific
-image composition, activation and recovery belong to the consuming project.
+1. Run **Step 1: Prep Release** on `main` with a higher version, such as `0.1.2` from `0.1.1`. Review the changelog and draft GitHub release.
+2. Run **Step 2: Publish Release** on `main` with that exact draft release URL. When `PUBLIC_RELEASES_ENABLED` is unset or false, it builds and checks the distributions, creates the release commit and tag, uploads the wheel and SHA-256 manifest, and publishes only the GitHub release. No PyPI/npm publishing runs.
+3. Record the wheel's checksum and source commit for the consuming project's separate validation and deployment.
+
+This path uses the existing `release` environment and GitHub repository permissions. The preparation job needs issue and pull-request read access to generate the changelog. Report any branch-protection or authorization failure rather than bypassing it.
+
+The public publishing job remains gated on `PUBLIC_RELEASES_ENABLED == 'true'` and requires separate authorization.
+
+> **Private incubation:** Public PyPI/npm publishing is not authorized. `package.json` remains `private: true`. The GitHub-only workflow does not require registry publishing credentials.
+
+With separate authorization, the extension may be published to `PyPI` and `npm` manually or using the [Jupyter Releaser](https://github.com/jupyter-server/jupyter_releaser).
+
+The procedures below describe optional public publication. Consumer-specific image composition, activation and recovery belong to the consuming project.
 Building or installing the extension establishes only that artifact/environment;
 report browser and downstream validation separately.
 
@@ -77,7 +88,7 @@ For the release workflows in this repository, make sure GitHub is configured wit
 
 When using [npm trusted publishing](https://docs.npmjs.com/trusted-publishers), `NPM_TOKEN` is not required (and trusted publishing is recommended). Configure `NPM_TOKEN` only if you are publishing without trusted publishers.
 
-Here is a summary of the steps to cut a new release:
+For public publication only, after separate approval, the sequence is:
 
 - Go to the Actions panel
 - Run the "Step 1: Prep Release" workflow
